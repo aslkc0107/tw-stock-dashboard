@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台股每日追蹤</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: #f5f6f8;
+    color: #1a1a1a;
+    padding: 24px;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  h1 { font-size: 22px; margin: 0; color: #111; }
+  .updated { font-size: 13px; color: #777; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+  }
+  .card .code { font-size: 12px; color: #888; }
+  .card .name { font-size: 15px; font-weight: 600; margin: 2px 0 8px; color: #222; }
+  .card .price { font-size: 24px; font-weight: 700; }
+  .card .delta { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .up { color: #d92b2b; }
+  .down { color: #1a9c46; }
+  .flat { color: #888; }
+  section.analysis { margin-top: 8px; }
+  .a-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border: 1px solid #eee;
+  }
+  .a-item .a-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .a-item .a-code {
+    font-size: 12px;
+    color: #fff;
+    background: #555;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .a-item .a-name { font-weight: 700; font-size: 15px; }
+  .a-item p { margin: 0; font-size: 14px; line-height: 1.6; color: #333; }
+  .summary {
+    background: #eef3ff;
+    border: 1px solid #d3e0ff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #23375f;
+  }
+  h2 { font-size: 16px; margin: 24px 0 12px; color: #111; }
+  footer { font-size: 12px; color: #999; text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>📈 台股每日追蹤</h1>
+    <div class="updated">最後更新：2026-07-22 11:18（資料來源：玩股網 wantgoo.com 即時報價）</div>
+  </header>
+
+  <div class="summary">
+    <strong>大盤脈動：</strong>台股近期連日強彈，台積電、聯電、力積電等半導體權值股輪番衝高，指數站上47K以上新高，資金明顯回流電子權值股，帶動0050、00919、009816等ETF隨盤上漲。今日以聯詠、台玻等AI相關題材股表現最強，銘旺科、達勝則呈現獨立走弱走勢。
+  </div>
+
+  <div class="grid" id="cards">
+    <!-- cards injected below as static content -->
+  </div>
+
+  <h2>個股與新聞分析</h2>
+  <section class="analysis" id="analysis"></section>
+
+  <footer>此頁面由排程任務每日自動更新（週一至週五 09:00 / 11:00 / 13:00）。股價資訊僅供參考，不構成投資建議。</footer>
+</div>
+
+<script>
+const stocks = [
+  {code:"0050", name:"元大台灣50", price:104.00, change:1.50, pct:1.46,
+    note:"ETF，追蹤台灣市值前50大權值股。半導體權值股（台積電、聯電）帶動大盤走強，0050隨盤上漲，屬穩健型核心持股。"},
+  {code:"00919", name:"群益台灣精選高息", price:29.58, change:0.58, pct:2.00,
+    note:"高股息ETF，成分股偏電子權值與金融股。今日隨大盤電子權值股走強而上漲，波動度中等，適合存股型投資人。"},
+  {code:"009816", name:"凱基台灣TOP50", price:15.03, change:0.27, pct:1.83,
+    note:"追蹤台灣前50大市值股票的ETF，走勢與0050高度連動，今日同步受惠半導體族群強漲。"},
+  {code:"00955", name:"中信日本商社", price:14.83, change:0.16, pct:1.09,
+    note:"追蹤日本大型商社（如三菱商事、三井物產等）的海外型ETF，走勢主要受日股與日圓匯率影響，與台股連動性較低。"},
+  {code:"3034", name:"聯詠", price:501.00, change:25.00, pct:5.25,
+    note:"邊緣AI題材持續發酵，法人估2027年營收年增近一成，加上IC設計族群受惠AI晶片熱潮，外資、投信買超不斷，今日領漲逾5%。短線動能強，但本益比已不低，追高須留意獲利了結賣壓。"},
+  {code:"1802", name:"台玻", price:56.20, change:2.10, pct:3.88,
+    note:"玻璃纖維布因AI伺服器、高階載板需求缺料，加上公司轉型「AI材料供應商」、擴產電子級玻纖布，帶動族群性上漲，題材延續性看俏。"},
+  {code:"4979", name:"華星光", price:372.00, change:15.00, pct:4.20,
+    note:"通信網路族群，近期波動大（曾單週重挫逾9%，本週回穩上漲）。本益比偏高（逾60倍），籌碼面波動劇烈，屬短線資金追捧標的，追高風險較高。"},
+  {code:"2429", name:"銘旺科", price:41.15, change:-1.85, pct:-4.30,
+    note:"光電小型股，近期股價震盪劇烈（單月已多次單日漲跌逾7%），營收成長平淡（今年前5月僅年增0.28%），今日逆勢下跌，籌碼投機性強，波動風險高。"},
+  {code:"7419", name:"達勝", price:57.00, change:-0.87, pct:-1.50,
+    note:"興櫃聚醯亞胺薄膜材料廠，近期股價走勢相對疲弱，缺乏明確利多消息，今日小跌，宜觀察後續營收表現。"},
+  {code:"2812", name:"台中銀", price:20.50, change:0.05, pct:0.24,
+    note:"4月營收年增近70%、月增37.58%，基本面穩健，加上金融股穩定配息題材，今日小漲，波動度低，屬穩健型持股。"},
+];
+
+const cardsEl = document.getElementById('cards');
+const analysisEl = document.getElementById('analysis');
+
+stocks.forEach(s => {
+  const dirClass = s.change > 0 ? 'up' : (s.change < 0 ? 'down' : 'flat');
+  const sign = s.change > 0 ? '+' : '';
+  const arrow = s.change > 0 ? '▲' : (s.change < 0 ? '▼' : '─');
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="code">${s.code}</div>
+    <div class="name">${s.name}</div>
+    <div class="price ${dirClass}">${s.price.toFixed(2)}</div>
+    <div class="delta ${dirClass}">${arrow} ${sign}${s.change.toFixed(2)} (${sign}${s.pct.toFixed(2)}%)</div>
+  `;
+  cardsEl.appendChild(card);
+
+  const item = document.createElement('div');
+  item.className = 'a-item';
+  item.innerHTML = `
+    <div class="a-head">
+      <span class="a-code">${s.code}</span>
+      <span class="a-name">${s.name}</span>
+      <span class="delta ${dirClass}" style="font-size:13px;">${arrow} ${sign}${s.pct.toFixed(2)}%</span>
+    </div>
+    <p>${s.note}</p>
+  `;
+  analysisEl.appendChild(item);
+});
+</script>
+</body>
+</html>
