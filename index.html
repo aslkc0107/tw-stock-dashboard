@@ -5,101 +5,236 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>台股每日追蹤</title>
 <style>
-  :root { color-scheme: light; }
+  :root { color-scheme: dark; }
   * { box-sizing: border-box; }
-  body {
+  html, body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    background: #f5f6f8;
-    color: #1a1a1a;
-    padding: 24px;
+    min-height: 100%;
   }
-  .wrap { max-width: 1000px; margin: 0 auto; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(99,102,241,0.25), transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, rgba(236,72,153,0.18), transparent 55%),
+      linear-gradient(180deg, #05060a 0%, #0a0e1a 40%, #0a0d16 100%);
+    color: #e8eaf2;
+    padding: 28px 20px 60px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
   header {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 22px;
   }
-  h1 { font-size: 22px; margin: 0; color: #111; }
-  .updated { font-size: 13px; color: #777; }
+  h1 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    background: linear-gradient(90deg, #a5b4fc, #f0abfc 45%, #fca5a5 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #34d399;
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.35);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px 2px rgba(52,211,153,0.7);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.75); }
+  }
+  .updated {
+    font-size: 12.5px;
+    color: #8a90a8;
+    text-align: right;
+  }
+  .updated b { color: #c7cbe0; }
+
+  .summary {
+    position: relative;
+    background: linear-gradient(135deg, rgba(99,102,241,0.14), rgba(236,72,153,0.08));
+    border: 1px solid rgba(148,163,255,0.25);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 26px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #cfd3e8;
+    backdrop-filter: blur(6px);
+  }
+  .summary .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #c4b5fd;
+    background: rgba(139,92,246,0.18);
+    border: 1px solid rgba(139,92,246,0.4);
+    padding: 2px 9px;
+    border-radius: 999px;
+    margin-bottom: 8px;
+  }
+
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    margin-bottom: 28px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+    margin-bottom: 34px;
   }
   .card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 14px 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    border: 1px solid #eee;
+    position: relative;
+    background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 16px 18px;
+    overflow: hidden;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
   }
-  .card .code { font-size: 12px; color: #888; }
-  .card .name { font-size: 15px; font-weight: 600; margin: 2px 0 8px; color: #222; }
-  .card .price { font-size: 24px; font-weight: 700; }
-  .card .delta { font-size: 13px; font-weight: 600; margin-top: 2px; }
-  .up { color: #d92b2b; }
-  .down { color: #1a9c46; }
-  .flat { color: #888; }
-  section.analysis { margin-top: 8px; }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .18s ease;
+    pointer-events: none;
+  }
+  .card.up::before { box-shadow: inset 0 0 40px rgba(248,113,113,0.18); }
+  .card.down::before { box-shadow: inset 0 0 40px rgba(52,211,153,0.16); }
+  .card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.2); }
+  .card:hover::before { opacity: 1; }
+
+  .card .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .card .code {
+    font-size: 11px;
+    color: #8a90a8;
+    letter-spacing: 0.5px;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .badge.up { color: #fca5a5; background: rgba(248,113,113,0.14); border: 1px solid rgba(248,113,113,0.35); }
+  .badge.down { color: #6ee7b7; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.35); }
+
+  .card .name { font-size: 15.5px; font-weight: 700; margin-bottom: 10px; color: #f1f2fa; }
+  .card .price {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    text-shadow: 0 0 18px currentColor;
+  }
+  .card .delta { font-size: 13px; font-weight: 700; margin-top: 4px; }
+  .up { color: #f87171; }
+  .down { color: #34d399; }
+  .flat { color: #9ca3af; }
+
+  h2 {
+    font-size: 15px;
+    margin: 0 0 14px;
+    color: #d8dbee;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2::before {
+    content: "";
+    width: 4px; height: 16px;
+    background: linear-gradient(180deg, #a5b4fc, #f0abfc);
+    border-radius: 3px;
+    display: inline-block;
+  }
+
   .a-item {
-    background: #fff;
-    border-radius: 12px;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
     padding: 16px 18px;
     margin-bottom: 12px;
-    border: 1px solid #eee;
+    transition: border-color .15s ease, background .15s ease;
   }
+  .a-item:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); }
   .a-item .a-head {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
   }
   .a-item .a-code {
-    font-size: 12px;
-    color: #fff;
-    background: #555;
-    padding: 2px 8px;
+    font-size: 11px;
+    color: #d8dbee;
+    background: rgba(255,255,255,0.08);
+    padding: 2px 9px;
     border-radius: 999px;
+    font-weight: 600;
   }
-  .a-item .a-name { font-weight: 700; font-size: 15px; }
-  .a-item p { margin: 0; font-size: 14px; line-height: 1.6; color: #333; }
-  .summary {
-    background: #eef3ff;
-    border: 1px solid #d3e0ff;
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin-bottom: 24px;
-    font-size: 14px;
-    line-height: 1.7;
-    color: #23375f;
+  .a-item .a-name { font-weight: 700; font-size: 15px; color: #f1f2fa; }
+  .a-item p { margin: 0; font-size: 13.5px; line-height: 1.7; color: #aeb2c8; }
+
+  footer {
+    font-size: 11.5px;
+    color: #666c85;
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
   }
-  h2 { font-size: 16px; margin: 24px 0 12px; color: #111; }
-  footer { font-size: 12px; color: #999; text-align: center; margin-top: 24px; }
+
+  ::selection { background: rgba(139,92,246,0.4); }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <h1>📈 台股每日追蹤</h1>
-    <div class="updated">最後更新：2026-07-22 11:18（資料來源：玩股網 wantgoo.com 即時報價）</div>
+    <div>
+      <h1>📈 台股每日追蹤<span class="live-pill"><span class="live-dot"></span>AUTO</span></h1>
+    </div>
+    <div class="updated">最後更新<br><b>2026-07-22 11:18</b> · 資料來源：玩股網 wantgoo.com</div>
   </header>
 
   <div class="summary">
-    <strong>大盤脈動：</strong>台股近期連日強彈，台積電、聯電、力積電等半導體權值股輪番衝高，指數站上47K以上新高，資金明顯回流電子權值股，帶動0050、00919、009816等ETF隨盤上漲。今日以聯詠、台玻等AI相關題材股表現最強，銘旺科、達勝則呈現獨立走弱走勢。
+    <span class="tag">大盤脈動</span><br>
+    台股近期連日強彈，台積電、聯電、力積電等半導體權值股輪番衝高，指數站上47K以上新高，資金明顯回流電子權值股，帶動0050、00919、009816等ETF隨盤上漲。今日以聯詠、台玻等AI相關題材股表現最強，銘旺科、達勝則呈現獨立走弱走勢。
   </div>
 
-  <div class="grid" id="cards">
-    <!-- cards injected below as static content -->
-  </div>
+  <div class="grid" id="cards"></div>
 
   <h2>個股與新聞分析</h2>
-  <section class="analysis" id="analysis"></section>
+  <section id="analysis"></section>
 
   <footer>此頁面由排程任務每日自動更新（週一至週五 09:00 / 11:00 / 13:00）。股價資訊僅供參考，不構成投資建議。</footer>
 </div>
@@ -137,12 +272,15 @@ stocks.forEach(s => {
   const arrow = s.change > 0 ? '▲' : (s.change < 0 ? '▼' : '─');
 
   const card = document.createElement('div');
-  card.className = 'card';
+  card.className = `card ${dirClass}`;
   card.innerHTML = `
-    <div class="code">${s.code}</div>
+    <div class="top-row">
+      <span class="code">${s.code}</span>
+      <span class="badge ${dirClass === 'flat' ? 'down' : dirClass}">${arrow} ${sign}${s.pct.toFixed(2)}%</span>
+    </div>
     <div class="name">${s.name}</div>
     <div class="price ${dirClass}">${s.price.toFixed(2)}</div>
-    <div class="delta ${dirClass}">${arrow} ${sign}${s.change.toFixed(2)} (${sign}${s.pct.toFixed(2)}%)</div>
+    <div class="delta ${dirClass}">${arrow} ${sign}${s.change.toFixed(2)}</div>
   `;
   cardsEl.appendChild(card);
 
